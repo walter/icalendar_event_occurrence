@@ -5,7 +5,8 @@ occurrences for a given event as discussed here:
 
 https://github.com/lpil/icalendar/issues/5
 
-For an event that may have dtstart, dtend, and rrule derived occurrences.
+For an event that may have `dtstart`, `dtend`, and `rrule` derived
+occurrences.
 
 May just be single occurrence if no rrule.
 
@@ -13,19 +14,31 @@ Initial work based on [`ExIcal.Recurrence`](https://github.com/fazibear/ex_ical)
 
 ## Usage
 
+There is a lot of possible event composition scenarios for generating
+occurrences! Check out the tests for more examples.
+
 ```Elixir
+  alias ICalendar.{Event, Event.Occurrence, RRULE}
 
-  # for a single RRULE
-  schema "somethings" do
-    field :rrule, ICalendar.RRULE.Type
-    ...
-  end
+  dtstart = Timex.to_datetime({{2017, 1, 1}, {0, 0, 1}}, "UTC")
+  dtend = Timex.shift(dtstart, hours: 1)
+  until = Timex.to_datetime({{2017, 12, 31}, {23, 59, 59}}, "UTC")
 
-  # or when allowing for multiple rrules
-  schema "somethings" do
-    field :rrules, {:array, ICalendar.RRULE.Type}, default: []
-    ...
-  end
+  rrule = %RRULE{frequency: :daily, until: until}
+
+  event = %Event{dtstart: dtstart, dtend: dtend, rrule: rrule}
+
+  # with default end_datetime of now
+  # so occurrences up to now
+  event |> Occurrence.occurrences()
+
+  # or you can specify an end_datetime
+  # good for generating occurrences for a recurring event up to a
+  # point in the future
+
+  end_datetime = Timex.shift(DateTime.utc_now, years: 1)
+
+  event |> Occurrence.occurrences(end_datetime)
 
 ```
 
